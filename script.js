@@ -1,41 +1,47 @@
-  const slider = document.querySelector('.items');
-  let isDown = false;
-  let startX;
-  let scrollLeft;
+const container = document.querySelector('.container');
+const cubes = document.querySelectorAll('.cube');
 
-  function startDrag(x) {
-    isDown = true;
-    slider.classList.add('active');
-    startX = x - slider.offsetLeft;
-    scrollLeft = slider.scrollLeft;
-  }
+let selectedCube = null;
+let offsetX = 0;
+let offsetY = 0;
 
-  function endDrag() {
-    isDown = false;
-    slider.classList.remove('active');
-  }
+// Give cubes an initial grid position
+cubes.forEach((cube, index) => {
+  let cols = 4; // matches CSS grid
+  let row = Math.floor(index / cols);
+  let col = index % cols;
+  cube.style.left = `${col * 100}px`;
+  cube.style.top = `${row * 100}px`;
 
-  function moveDrag(x, e) {
-    if (!isDown) return;
-    e.preventDefault();
-    const pos = x - slider.offsetLeft;
-    const walk = (pos - startX) * 2; // scroll speed multiplier
-    slider.scrollLeft = scrollLeft - walk;
-  }
+  cube.addEventListener('mousedown', (e) => {
+    selectedCube = cube;
 
-  // ---- Mouse Events ----
-  slider.addEventListener('mousedown', (e) => startDrag(e.pageX));
-  slider.addEventListener('mouseup', endDrag);
-  slider.addEventListener('mouseleave', endDrag);
-  slider.addEventListener('mousemove', (e) => moveDrag(e.pageX, e));
+    // Calculate offset between mouse and cube position
+    const rect = cube.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+  });
+});
 
-  // ---- Touch Events (mobile) ----
-  slider.addEventListener('touchstart', (e) => startDrag(e.touches[0].pageX));
-  slider.addEventListener('touchend', endDrag);
-  slider.addEventListener('touchmove', (e) => moveDrag(e.touches[0].pageX, e));
+// Mouse move for dragging
+document.addEventListener('mousemove', (e) => {
+  if (!selectedCube) return;
 
-  // ---- Pointer Events (for Cypress / modern browsers) ----
-  slider.addEventListener('pointerdown', (e) => startDrag(e.clientX));
-  slider.addEventListener('pointerup', endDrag);
-  slider.addEventListener('pointerleave', endDrag);
-  slider.addEventListener('pointermove', (e) => moveDrag(e.clientX, e));
+  const containerRect = container.getBoundingClientRect();
+
+  // Calculate new position
+  let newX = e.clientX - containerRect.left - offsetX;
+  let newY = e.clientY - containerRect.top - offsetY;
+
+  // Boundary constraints
+  newX = Math.max(0, Math.min(newX, containerRect.width - selectedCube.offsetWidth));
+  newY = Math.max(0, Math.min(newY, containerRect.height - selectedCube.offsetHeight));
+
+  selectedCube.style.left = `${newX}px`;
+  selectedCube.style.top = `${newY}px`;
+});
+
+// Release mouse to drop cube
+document.addEventListener('mouseup', () => {
+  selectedCube = null;
+});
