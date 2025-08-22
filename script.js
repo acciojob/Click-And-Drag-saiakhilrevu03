@@ -1,4 +1,4 @@
-const container = document.querySelector('.container');
+const container = document.querySelector('.items');
 const cubes = document.querySelectorAll('.cube');
 
 let selectedCube = null;
